@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тупорилий каз</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Змінні для JS */
+            --reel-height-val: 150;
+            --symbols-count: 6;
+
+            /* Кольори */
+            --bg-gradient-start: #1a2a3a;
+            --bg-gradient-end: #0a151f;
+            --container-bg: rgba(25, 35, 45, 0.9);
+            --primary-gold: #ffd700;
+            --text-light: #e0e0e0;
+            --text-soft: #a0a0a0;
+            --reel-bg: #0d1a26;
+            --spin-button-start: #e74c3c;
+            --spin-button-end: #c0392b;
+            --spin-button-hover-start: #c0392b;
+            --spin-button-hover-end: #a53024;
+            --music-button-start: #3498db;
+            --music-button-end: #2980b9;
+            --win-color: #2ecc71;
+            --lose-color: #e74c3c;
+            --balance-color: #2ecc71;
+
+            /* Розміри та відступи */
+            --container-padding: 40px;
+            --reel-width: 130px;
+            --reel-height: 150px;
+            --reel-gap: 20px;
+            --button-padding: 15px 40px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .casino-container {
+            background-color: var(--container-bg);
+            border-radius: 20px;
+            padding: var(--container-padding);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            width: 100%;
+            max-width: 900px;
+            border: 1px solid rgba(var(--primary-gold), 0.3);
+            position: relative;
+        }
+
+        h1 {
+            color: var(--primary-gold);
+            margin-top: 0;
+            margin-bottom: 35px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .game-area {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            width: 100%;
+            flex-wrap: wrap;
+            flex-direction: row-reverse;
+        }
+
+        .slot-machine-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .slot-machine {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            gap: var(--reel-gap);
+        }
+
+        .reel {
+            background-color: var(--reel-bg);
+            border: 4px solid var(--primary-gold);
+            border-radius: 12px;
+            width: var(--reel-width);
+            height: var(--reel-height);
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.7);
+        }
+
+        .reel-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            will-change: transform;
+        }
+
+        .reel-item {
+            height: var(--reel-height);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4em;
+            flex-shrink: 0;
+            color: #ffffff;
+        }
+
+        @keyframes infinite-scroll {
+            from { transform: translateY(0); }
+            to { transform: translateY(calc(-100% / 3)); }
+        }
+
+        .is-spinning .reel-inner {
+            animation: infinite-scroll 0.2s linear infinite;
+        }
+        
+        @keyframes highlight {
+            50% { transform: scale(1.15); text-shadow: 0 0 15px var(--primary-gold); }
+        }
+        .reel-item.highlight {
+            animation: highlight 0.7s ease-in-out;
+        }
+
+        .controls { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+
+        .spin-button, .add-coins-button, .music-toggle-button {
+            color: white; border: none; cursor: pointer; transition: all 0.3s ease;
+            font-weight: 700; text-transform: uppercase; border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            outline: none;
+        }
+        .spin-button:disabled, .add-coins-button:disabled, .music-toggle-button:disabled {
+            background: #4a4a4a !important; cursor: not-allowed; opacity: 0.7; transform: none; box-shadow: none;
+        }
+        .spin-button:hover:not(:disabled), .add-coins-button:hover:not(:disabled), .music-toggle-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .spin-button { padding: var(--button-padding); font-size: 1.5em; background: linear-gradient(180deg, var(--spin-button-start), var(--spin-button-end)); }
+        .spin-button:hover:not(:disabled) { background: linear-gradient(180deg, var(--spin-button-hover-start), var(--spin-button-hover-end)); }
+        
+        .add-coins-button, .music-toggle-button { padding: 8px 20px; font-size: 1em; }
+        .add-coins-button { background: linear-gradient(180deg, #4CAF50, #45a049); }
+        .music-toggle-button { background: linear-gradient(180deg, var(--music-button-start), var(--music-button-end)); }
+
+        .message { margin-top: 30px; font-size: 1.3em; color: var(--text-soft); min-height: 1.5em; font-weight: bold; }
+        .message.win { color: var(--win-color); }
+        .message.lose { color: var(--lose-color); }
+
+        .pity-progress, .balance-display { font-weight: bold; min-height: 1.2em; }
+        .pity-progress { color: var(--primary-gold); font-size: 1.1em; }
+        .balance-display { color: var(--balance-color); font-size: 1.2em; }
+        
+        .paytable {
+            background-color: rgba(13, 26, 38, 0.7); border-radius: 12px; padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2); width: 280px; text-align: left;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .paytable h2 { color: var(--primary-gold); font-size: 1.8em; margin: 0 0 20px 0; text-align: center; }
+        .paytable-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.1em; padding-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1)}
+        .paytable-item:last-child { border-bottom: none; }
+        .paytable-symbols { display: flex; gap: 5px; font-size: 1.5em; }
+        .paytable-payout { font-weight: bold; color: var(--win-color); margin-left: 10px; }
+        
+        @media (max-width: 850px) {
+            .game-area { flex-direction: column-reverse; align-items: center; gap: 30px; }
+            .paytable { width: 100%; max-width: 400px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .casino-container { padding: 20px; }
+            h1 { font-size: 2em; }
+            .slot-machine { gap: 10px; }
+            .reel { width: 90px; height: 100px; }
+            .reel-item { font-size: 3em; }
+            :root { --reel-height-val: 100; }
+        }
+    </style>
+</head>
+<body>
+    <div class="casino-container">
+        <h1>Тупорилий Каз</h1>
+        <div class="game-area">
+            <div class="paytable" id="paytable"><h2>Комбінації</h2></div>
+            <div class="slot-machine-wrapper">
+                <div class="slot-machine">
+                    <div class="reel" id="reel-1"><div class="reel-inner"></div></div>
+                    <div class="reel" id="reel-2"><div class="reel-inner"></div></div>
+                    <div class="reel" id="reel-3"><div class="reel-inner"></div></div>
+                </div>
+                <div class="controls">
+                    <div class="pity-progress" id="pity-progress"></div>
+                    <button class="spin-button" id="spin-button">Крутити!</button>
+                    <div class="balance-display" id="balance-display"></div>
+                    <button class="add-coins-button" id="add-coins-button">+100 монет</button>
+                    <button class="music-toggle-button" id="music-toggle">Музика</button>
+                </div>
+            </div>
+        </div>
+        <div class="message" id="game-message" aria-live="polite"></div>
+        <audio id="background-audio" loop src="background_music.mp3"></audio>
+        <audio id="spin-sound" src="spin_sound.mp3"></audio>
+        <audio id="win-sound" src="win_sound.mp3"></audio>
+        <audio id="lose-sound" src="lose_sound.mp3"></audio>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Елементи DOM ---
+            const reels = Array.from(document.querySelectorAll('.reel'));
+            const spinButton = document.getElementById('spin-button');
+            const gameMessage = document.getElementById('game-message');
+            const paytableElement = document.getElementById('paytable');
+            const pityProgressElement = document.getElementById('pity-progress');
+            const balanceDisplayElement = document.getElementById('balance-display');
+            const musicToggleButton = document.getElementById('music-toggle');
+            const addCoinsButton = document.getElementById('add-coins-button');
+            const sounds = {
+                background: document.getElementById('background-audio'),
+                spin: document.getElementById('spin-sound'),
+                win: document.getElementById('win-sound'),
+                lose: document.getElementById('lose-sound'),
+            };
+
+            // --- Константи ---
+            const rootStyles = getComputedStyle(document.documentElement);
+            const REEL_ITEM_HEIGHT = parseInt(rootStyles.getPropertyValue('--reel-height-val'));
+            const SYMBOLS_COUNT = parseInt(rootStyles.getPropertyValue('--symbols-count'));
+            const SPIN_DURATION_BLUR = 2000;
+            const SPIN_DURATION_SETTLE = 1000;
+            const PITY_THRESHOLD = 20; // Поріг гарантованого виграшу
+            const SPIN_COST = 10; // Вартість обертання
+            const ADD_COINS_AMOUNT = 100; // Кількість доданих монет
+            const SYMBOLS = ['🍒', '🍋', '🍇', '🍊', '🔔', '💎'];
+            const WINNING_PATTERNS = [
+                { pattern: ['💎', '💎', '💎'], payout: 750, message: 'ВІТАЄМО! ТРИ ДІАМАНТИ!' },
+                { pattern: ['🍒', '🍒', '🍒'], payout: 500, message: 'Джекпот! Три вишеньки!' },
+                { pattern: ['🔔', '🔔', '🔔'], payout: 300, message: 'Чудово! Три дзвіночки!' }
+            ];
+
+            // --- Стан гри ---
+            const state = {
+                spinCount: parseInt(localStorage.getItem('spinCount')) || 0,
+                playerBalance: parseInt(localStorage.getItem('playerBalance')) || 200,
+                isMusicPlaying: false,
+                isSpinning: false,
+            };
+
+            // --- Допоміжні функції ---
+            const getRandomSymbol = () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+            const playSound = (key) => { if (sounds[key]) { sounds[key].currentTime = 0; sounds[key].play().catch(e => {}); } };
+
+            function updateUI() {
+                balanceDisplayElement.textContent = `Баланс: ${state.playerBalance} монет`;
+                const spinsUntilNextPity = PITY_THRESHOLD - (state.spinCount % PITY_THRESHOLD);
+                pityProgressElement.textContent = `До гаранту: ${spinsUntilNextPity} спінів`;
+                spinButton.disabled = state.isSpinning || state.playerBalance < SPIN_COST;
+                addCoinsButton.disabled = state.isSpinning;
+                musicToggleButton.textContent = `Музика: ${state.isMusicPlaying ? 'Увімк' : 'Вимк'}`;
+                if (state.playerBalance < SPIN_COST && !state.isSpinning) updateMessage('Недостатньо монет!', 'lose');
+            }
+            function updateMessage(text, type = '') { gameMessage.textContent = text; gameMessage.className = `message ${type}`; }
+
+            function checkWin(finalSymbols) {
+                let win = WINNING_PATTERNS.find(p => p.pattern.every((s, i) => s === finalSymbols[i]));
+                if (win) return win;
+                if (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]) {
+                    return { message: `Ого! Три ${finalSymbols[0]}!`, payout: 100 };
+                }
+                return null;
+            }
+
+            function populatePaytable() {
+                const header = paytableElement.querySelector('h2');
+                paytableElement.innerHTML = '';
+                if (header) paytableElement.appendChild(header);
+
+                const createPaytableItem = (symbols, payout) => {
+                    const item = document.createElement('div');
+                    item.className = 'paytable-item';
+                    item.innerHTML = `
+                        <div class="paytable-symbols">${symbols.map(s => `<span>${s}</span>`).join('')}</div>
+                        <span class="paytable-payout">+${payout}</span>
+                    `;
+                    paytableElement.appendChild(item);
+                };
+                WINNING_PATTERNS.forEach(win => createPaytableItem(win.pattern, win.payout));
+                SYMBOLS.forEach(symbol => {
+                    if (!WINNING_PATTERNS.some(p => p.pattern[0] === symbol)) {
+                        createPaytableItem([symbol, symbol, symbol], 100);
+                    }
+                });
+            }
+            
+            function initializeReels() {
+                reels.forEach(reel => {
+                    const reelInner = reel.querySelector('.reel-inner');
+                    reelInner.innerHTML = '';
+                    const symbolsPool = [...SYMBOLS, ...SYMBOLS, ...SYMBOLS];
+                    symbolsPool.forEach(symbol => {
+                        const item = document.createElement('div');
+                        item.className = 'reel-item';
+                        item.textContent = symbol;
+                        reelInner.appendChild(item);
+                    });
+                    reelInner.style.transform = `translateY(-${REEL_ITEM_HEIGHT * SYMBOLS_COUNT}px)`;
+                });
+            }
+
+            async function spin() {
+                if (state.isSpinning || state.playerBalance < SPIN_COST) return;
+
+                // 1. ПОЧАТОК: Блокуємо кнопку
+                state.isSpinning = true;
+                state.playerBalance -= SPIN_COST;
+                state.spinCount++;
+                localStorage.setItem('playerBalance', state.playerBalance);
+                localStorage.setItem('spinCount', state.spinCount);
+                updateUI();
+                updateMessage('Крутимо...', '');
+                playSound('spin');
+
+                const isPitySpin = (state.spinCount > 0 && state.spinCount % PITY_THRESHOLD === 0);
+                let targetSymbols = [];
+                if (isPitySpin) {
+                    const winPattern = WINNING_PATTERNS[Math.floor(Math.random() * WINNING_PATTERNS.length)];
+                    targetSymbols = winPattern.pattern;
+                    updateMessage('Гарантований виграш!', 'win');
+                } else {
+                    targetSymbols = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
+                }
+
+                const spinPromises = reels.map((reel, index) => {
+                    return new Promise(resolve => {
+                        const reelInner = reel.querySelector('.reel-inner');
+                        
+                        // Запускаємо швидке обертання
+                        reel.classList.add('is-spinning');
+
+                        // Через N секунд починаємо уповільнення
+                        setTimeout(() => {
+                            reel.classList.remove('is-spinning');
+                            const targetIndex = SYMBOLS.indexOf(targetSymbols[index]);
+                            const finalPosition = (SYMBOLS_COUNT + targetIndex) * REEL_ITEM_HEIGHT;
+                            
+                            reelInner.style.transition = `transform ${SPIN_DURATION_SETTLE}ms cubic-bezier(0.25, 1, 0.5, 1)`;
+                            reelInner.style.transform = `translateY(-${finalPosition}px)`;
+                            
+                            // ЗМІНА: Замість складної події 'transitionend',
+                            // використовуємо простий і надійний таймер.
+                            // Він спрацює рівно тоді, коли закінчиться анімація уповільнення.
+                            setTimeout(() => {
+                                const targetItem = reelInner.children[SYMBOLS_COUNT + targetIndex];
+                                if (targetItem) {
+                                    targetItem.classList.add('highlight');
+                                }
+                                resolve(); // Завершуємо Promise
+                            }, SPIN_DURATION_SETTLE);
+
+                        }, SPIN_DURATION_BLUR + (index * 300));
+                    });
+                });
+
+                // Чекаємо, поки всі анімації завершаться
+                await Promise.all(spinPromises);
+                
+                // --- Обробка результату ---
+                const winResult = checkWin(targetSymbols);
+                if (winResult) {
+                    updateMessage(winResult.message, 'win');
+                    state.playerBalance += winResult.payout;
+                    playSound('win');
+                } else {
+                    if (!isPitySpin) updateMessage('Мимо! Спробуй ще раз!', 'lose');
+                    playSound('lose');
+                }
+                localStorage.setItem('playerBalance', state.playerBalance);
+
+                // --- Підготовка до наступного спіну ---
+                setTimeout(() => {
+                    reels.forEach((reel, index) => {
+                        const reelInner = reel.querySelector('.reel-inner');
+                        // Прибираємо підсвітку з усіх елементів
+                        Array.from(reelInner.children).forEach(child => child.classList.remove('highlight'));
+                        // Миттєво скидаємо позицію для наступного спіну
+                        reelInner.style.transition = 'none';
+                        const targetIndex = SYMBOLS.indexOf(targetSymbols[index]);
+                        reelInner.style.transform = `translateY(-${(SYMBOLS_COUNT + targetIndex) * REEL_ITEM_HEIGHT}px)`;
+                    });
+
+                    // 2. КІНЕЦЬ: Розблокуємо кнопку
+                    state.isSpinning = false;
+                    updateUI();
+                }, 1000); // Невелика затримка перед розблокуванням кнопки, щоб гравець встиг побачити результат
+            }
+
+            // --- Обробники подій ---
+            spinButton.addEventListener('click', spin);
+            addCoinsButton.addEventListener('click', () => {
+                if(state.isSpinning) return;
+                state.playerBalance += ADD_COINS_AMOUNT;
+                updateUI();
+                updateMessage(`+${ADD_COINS_AMOUNT} монет!`, 'win');
+            });
+            musicToggleButton.addEventListener('click', () => {
+                state.isMusicPlaying = !state.isMusicPlaying;
+                state.isMusicPlaying ? sounds.background.play() : sounds.background.pause();
+                updateUI();
+            });
+
+            // --- Початкове завантаження ---
+            initializeReels();
+            populatePaytable();
+            updateUI();
+            updateMessage('Натисни "Крутити"');
+        });
+    </script>
+</body>
+</html>
